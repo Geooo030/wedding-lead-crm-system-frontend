@@ -150,7 +150,14 @@ const progress = ref(0)
 const currentStage = ref('new')
 const showFollowDialog = ref(false)
 
-const followForm = reactive({
+const followForm = reactive<{
+  contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit'
+  contactResult: 'reached' | 'unreachable' | 'callback' | 'failed'
+  customerIntention: 'high' | 'medium' | 'low' | 'none'
+  currentStage: 'new' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
+  notes: string
+  nextAction: string
+}>({
   contactMethod: 'phone',
   contactResult: 'reached',
   customerIntention: 'medium',
