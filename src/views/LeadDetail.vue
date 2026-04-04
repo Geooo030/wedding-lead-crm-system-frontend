@@ -170,10 +170,11 @@
       v-model="showFollowDialog" 
       title="添加跟进记录" 
       :width="isMobile ? '90%' : '500px'"
+      :destroy-on-close="true"
     >
-      <el-form :model="followForm" label-width="100px" :label-position="isMobile ? 'top' : 'right'">
+      <el-form ref="followFormRef" :model="followForm" label-width="100px" :label-position="isMobile ? 'top' : 'right'">
         <el-form-item label="联系方式">
-          <el-select v-model="followForm.contactMethod" :style="{ width: isMobile ? '100%' : 'auto' }">
+          <el-select v-model="followForm.contactMethod" placeholder="请选择联系方式" :style="{ width: isMobile ? '100%' : '200px' }" clearable>
             <el-option label="电话" value="phone" />
             <el-option label="WhatsApp" value="whatsapp" />
             <el-option label="邮件" value="email" />
@@ -182,7 +183,7 @@
         </el-form-item>
         
         <el-form-item label="联系结果">
-          <el-select v-model="followForm.contactResult" :style="{ width: isMobile ? '100%' : 'auto' }">
+          <el-select v-model="followForm.contactResult" placeholder="请选择联系结果" :style="{ width: isMobile ? '100%' : '200px' }" clearable>
             <el-option label="接通" value="reached" />
             <el-option label="未接通" value="unreachable" />
             <el-option label="回拨" value="callback" />
@@ -191,7 +192,7 @@
         </el-form-item>
         
         <el-form-item label="客户意向">
-          <el-select v-model="followForm.customerIntention" :style="{ width: isMobile ? '100%' : 'auto' }">
+          <el-select v-model="followForm.customerIntention" placeholder="请选择客户意向" :style="{ width: isMobile ? '100%' : '200px' }" clearable>
             <el-option label="高意向" value="high" />
             <el-option label="中意向" value="medium" />
             <el-option label="低意向" value="low" />
@@ -200,7 +201,7 @@
         </el-form-item>
         
         <el-form-item label="当前阶段">
-          <el-select v-model="followForm.currentStage" :style="{ width: isMobile ? '100%' : 'auto' }">
+          <el-select v-model="followForm.currentStage" placeholder="请选择当前阶段" :style="{ width: isMobile ? '100%' : '200px' }" clearable>
             <el-option label="新线索" value="new_lead" />
             <el-option label="首次联系" value="first_contact" />
             <el-option label="需求确认" value="requirement" />
@@ -227,7 +228,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
@@ -245,21 +246,39 @@ const followRecords = ref<FollowRecord[]>([])
 const progress = ref(0)
 const currentStage = ref('new_lead')
 const showFollowDialog = ref(false)
+const followFormRef = ref()
 
 const followForm = reactive<{
-  contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit'
-  contactResult: 'reached' | 'unreachable' | 'callback' | 'failed'
-  customerIntention: 'high' | 'medium' | 'low' | 'none'
-  currentStage: 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
+  contactMethod: string | undefined
+  contactResult: string | undefined
+  customerIntention: string | undefined
+  currentStage: string | undefined
   notes: string
   nextAction: string
 }>({
-  contactMethod: 'phone',
-  contactResult: 'reached',
-  customerIntention: 'medium',
-  currentStage: 'new_lead',
+  contactMethod: undefined,
+  contactResult: undefined,
+  customerIntention: undefined,
+  currentStage: undefined,
   notes: '',
   nextAction: ''
+})
+
+const resetFollowForm = () => {
+  followForm.contactMethod = 'phone'
+  followForm.contactResult = 'reached'
+  followForm.customerIntention = 'medium'
+  followForm.currentStage = 'new_lead'
+  followForm.notes = ''
+  followForm.nextAction = ''
+}
+
+watch(showFollowDialog, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      resetFollowForm()
+    })
+  }
 })
 
 const progressLabel = computed(() => {
@@ -314,6 +333,23 @@ const loadProgress = async () => {
 }
 
 const submitFollow = async () => {
+  if (!followForm.contactMethod) {
+    ElMessage.warning('请选择联系方式')
+    return
+  }
+  if (!followForm.contactResult) {
+    ElMessage.warning('请选择联系结果')
+    return
+  }
+  if (!followForm.customerIntention) {
+    ElMessage.warning('请选择客户意向')
+    return
+  }
+  if (!followForm.currentStage) {
+    ElMessage.warning('请选择当前阶段')
+    return
+  }
+  
   const id = route.params.id as string
   try {
     await createFollowRecord({

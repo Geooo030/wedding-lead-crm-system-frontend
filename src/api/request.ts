@@ -18,6 +18,17 @@ instance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
+    // 清理空字符串参数
+    if (config.params) {
+      const cleanedParams: Record<string, unknown> = {}
+      Object.entries(config.params).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+          cleanedParams[key] = value
+        }
+      })
+      config.params = cleanedParams
+    }
+    
     return config
   },
   (error) => {
