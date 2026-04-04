@@ -8,7 +8,7 @@
         </el-form-item>
         
         <el-form-item label="状态">
-          <el-select v-model="filters.status" placeholder="选择状态" clearable>
+          <el-select v-model="filters.status" placeholder="选择状态" clearable style="width: 150px;">
             <el-option label="新线索" value="new_lead" />
             <el-option label="联系中" value="contacting" />
             <el-option label="谈判中" value="negotiating" />
@@ -18,7 +18,7 @@
         </el-form-item>
         
         <el-form-item label="优先级">
-          <el-select v-model="filters.priorityLevel" placeholder="选择优先级" clearable>
+          <el-select v-model="filters.priorityLevel" placeholder="选择优先级" clearable style="width: 130px;">
             <el-option label="🔥 高" value="hot" />
             <el-option label="🌤️ 中" value="warm" />
             <el-option label="❄️ 低" value="cold" />
