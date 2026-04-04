@@ -57,7 +57,7 @@ export interface FollowRecord {
   contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit'
   contactResult: 'reached' | 'unreachable' | 'callback' | 'failed'
   customerIntention: 'high' | 'medium' | 'low' | 'none'
-  currentStage: 'new' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
+  currentStage: 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
   notes: string
   nextAction: string
   nextActionDate: string

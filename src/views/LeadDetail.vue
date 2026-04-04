@@ -1,8 +1,43 @@
 <template>
-  <div class="lead-detail">
-    <div class="detail-header">
+  <div class="lead-detail" :class="{ 'is-mobile': isMobile }">
+    <!-- PC端头部 -->
+    <div v-if="!isMobile" class="detail-header">
       <el-button @click="goBack">← 返回列表</el-button>
       <h1>{{ lead?.companyName }}</h1>
+    </div>
+    
+    <!-- 移动端头部 -->
+    <div v-else class="mobile-header">
+      <div class="header-top">
+        <el-button text @click="goBack">
+          <el-icon><ArrowLeft /></el-icon>
+        </el-button>
+        <span class="header-title">客户详情</span>
+        <div class="header-actions">
+          <el-dropdown trigger="click">
+            <el-icon class="more-icon"><More /></el-icon>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="showFollowDialog = true">添加跟进</el-dropdown-item>
+                <el-dropdown-item v-if="lead?.contactPhone" @click="callPhone(lead.contactPhone)">
+                  拨打电话
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </div>
+      <div class="header-company">
+        <h1>{{ lead?.companyName }}</h1>
+        <div class="company-tags">
+          <el-tag :type="getPriorityType(lead?.priorityLevel)" size="small">
+            {{ getPriorityLabel(lead?.priorityLevel) }}优先
+          </el-tag>
+          <el-tag :type="getStatusType(lead?.status)" size="small">
+            {{ getStatusLabel(lead?.status) }}
+          </el-tag>
+        </div>
+      </div>
     </div>
     
     <div class="detail-content">
@@ -10,7 +45,8 @@
       <div class="card info-card">
         <h2>客户信息</h2>
         
-        <el-descriptions :column="2" border>
+        <!-- PC端表格 -->
+        <el-descriptions v-if="!isMobile" :column="2" border>
           <el-descriptions-item label="公司名称">{{ lead?.companyName }}</el-descriptions-item>
           <el-descriptions-item label="公司类型">{{ lead?.companyType }}</el-descriptions-item>
           <el-descriptions-item label="国家">{{ lead?.country }}</el-descriptions-item>
@@ -31,6 +67,39 @@
           <el-descriptions-item label="创建时间">{{ formatDate(lead?.createdAt) }}</el-descriptions-item>
         </el-descriptions>
         
+        <!-- 移动端信息列表 -->
+        <div v-else class="mobile-info-list">
+          <div class="info-item">
+            <span class="info-label">公司类型</span>
+            <span class="info-value">{{ lead?.companyType || '-' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">所在地区</span>
+            <span class="info-value">{{ lead?.country }} · {{ lead?.region }}</span>
+          </div>
+          <div class="info-item" v-if="lead?.contactPhone" @click="callPhone(lead.contactPhone)">
+            <span class="info-label">联系电话</span>
+            <span class="info-value phone">
+              {{ lead.contactPhone }}
+              <el-icon><Phone /></el-icon>
+            </span>
+          </div>
+          <div class="info-item" v-if="lead?.contactEmail">
+            <span class="info-label">邮箱</span>
+            <span class="info-value">{{ lead.contactEmail }}</span>
+          </div>
+          <div class="info-item" v-if="lead?.website">
+            <span class="info-label">网站</span>
+            <span class="info-value link" @click="openWebsite(lead.website)">
+              {{ lead.website }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">创建时间</span>
+            <span class="info-value">{{ formatDate(lead?.createdAt) }}</span>
+          </div>
+        </div>
+        
         <div class="notes" v-if="lead?.notes">
           <h4>备注</h4>
           <p>{{ lead.notes }}</p>
@@ -41,14 +110,14 @@
       <div class="card follow-card">
         <div class="follow-header">
           <h2>跟进记录</h2>
-          <el-button type="primary" @click="showFollowDialog = true">添加跟进</el-button>
+          <el-button v-if="!isMobile" type="primary" @click="showFollowDialog = true">添加跟进</el-button>
         </div>
         
         <!-- 进度条 -->
         <div class="progress-section">
           <h4>跟进进度</h4>
           <el-progress :percentage="progress" :format="() => progressLabel" />
-          <div class="stage-tips">
+          <div class="stage-tips" :class="{ 'is-mobile': isMobile }">
             <span v-for="tip in stageTips" :key="tip.stage" :class="{ active: currentStage === tip.stage }">
               {{ tip.label }}
             </span>
@@ -57,16 +126,21 @@
         
         <!-- 跟进列表 -->
         <div class="follow-list">
+          <div v-if="followRecords.length === 0" class="empty-state">
+            暂无跟进记录
+          </div>
           <div v-for="record in followRecords" :key="record.id" class="follow-item">
             <div class="follow-time">{{ formatDate(record.createdAt) }}</div>
             <div class="follow-content">
-              <el-tag size="small">{{ getContactMethodLabel(record.contactMethod) }}</el-tag>
-              <el-tag size="small" :type="getContactResultType(record.contactResult)">
-                {{ getContactResultLabel(record.contactResult) }}
-              </el-tag>
-              <el-tag size="small" :type="getIntentionType(record.customerIntention)">
-                {{ getIntentionLabel(record.customerIntention) }}意向
-              </el-tag>
+              <div class="follow-tags">
+                <el-tag size="small">{{ getContactMethodLabel(record.contactMethod) }}</el-tag>
+                <el-tag size="small" :type="getContactResultType(record.contactResult)">
+                  {{ getContactResultLabel(record.contactResult) }}
+                </el-tag>
+                <el-tag size="small" :type="getIntentionType(record.customerIntention)">
+                  {{ getIntentionLabel(record.customerIntention) }}意向
+                </el-tag>
+              </div>
               <p v-if="record.notes">{{ record.notes }}</p>
               <p v-if="record.nextAction" class="next-action">下一步：{{ record.nextAction }}</p>
             </div>
@@ -75,11 +149,31 @@
       </div>
     </div>
     
+    <!-- 移动端底部操作栏 -->
+    <div v-if="isMobile" class="mobile-bottom-bar">
+      <el-button type="primary" size="large" @click="showFollowDialog = true">
+        <el-icon><Plus /></el-icon>
+        添加跟进
+      </el-button>
+      <el-button 
+        v-if="lead?.contactPhone" 
+        size="large" 
+        @click="callPhone(lead.contactPhone)"
+      >
+        <el-icon><Phone /></el-icon>
+        拨打电话
+      </el-button>
+    </div>
+    
     <!-- 添加跟进对话框 -->
-    <el-dialog v-model="showFollowDialog" title="添加跟进记录" width="500px">
-      <el-form :model="followForm" label-width="100px">
+    <el-dialog 
+      v-model="showFollowDialog" 
+      title="添加跟进记录" 
+      :width="isMobile ? '90%' : '500px'"
+    >
+      <el-form :model="followForm" label-width="100px" :label-position="isMobile ? 'top' : 'right'">
         <el-form-item label="联系方式">
-          <el-select v-model="followForm.contactMethod">
+          <el-select v-model="followForm.contactMethod" :style="{ width: isMobile ? '100%' : 'auto' }">
             <el-option label="电话" value="phone" />
             <el-option label="WhatsApp" value="whatsapp" />
             <el-option label="邮件" value="email" />
@@ -88,7 +182,7 @@
         </el-form-item>
         
         <el-form-item label="联系结果">
-          <el-select v-model="followForm.contactResult">
+          <el-select v-model="followForm.contactResult" :style="{ width: isMobile ? '100%' : 'auto' }">
             <el-option label="接通" value="reached" />
             <el-option label="未接通" value="unreachable" />
             <el-option label="回拨" value="callback" />
@@ -97,7 +191,7 @@
         </el-form-item>
         
         <el-form-item label="客户意向">
-          <el-select v-model="followForm.customerIntention">
+          <el-select v-model="followForm.customerIntention" :style="{ width: isMobile ? '100%' : 'auto' }">
             <el-option label="高意向" value="high" />
             <el-option label="中意向" value="medium" />
             <el-option label="低意向" value="low" />
@@ -106,8 +200,8 @@
         </el-form-item>
         
         <el-form-item label="当前阶段">
-          <el-select v-model="followForm.currentStage">
-            <el-option label="新线索" value="new" />
+          <el-select v-model="followForm.currentStage" :style="{ width: isMobile ? '100%' : 'auto' }">
+            <el-option label="新线索" value="new_lead" />
             <el-option label="首次联系" value="first_contact" />
             <el-option label="需求确认" value="requirement" />
             <el-option label="报价/样品" value="quotation" />
@@ -139,29 +233,31 @@ import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { getLeadById } from '@/api/lead'
 import { getFollowRecords, createFollowRecord, getFollowProgress } from '@/api/follow'
+import { isMobile as isMobileDevice } from '@/utils/device'
 import type { Lead, FollowRecord } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
+const isMobile = ref(isMobileDevice())
 
 const lead = ref<Lead>()
 const followRecords = ref<FollowRecord[]>([])
 const progress = ref(0)
-const currentStage = ref('new')
+const currentStage = ref('new_lead')
 const showFollowDialog = ref(false)
 
 const followForm = reactive<{
   contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit'
   contactResult: 'reached' | 'unreachable' | 'callback' | 'failed'
   customerIntention: 'high' | 'medium' | 'low' | 'none'
-  currentStage: 'new' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
+  currentStage: 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
   notes: string
   nextAction: string
 }>({
   contactMethod: 'phone',
   contactResult: 'reached',
   customerIntention: 'medium',
-  currentStage: 'new',
+  currentStage: 'new_lead',
   notes: '',
   nextAction: ''
 })
@@ -169,6 +265,7 @@ const followForm = reactive<{
 const progressLabel = computed(() => {
   const labels: Record<string, string> = {
     new: '新线索',
+    new_lead: '新线索',
     first_contact: '首次联系',
     requirement: '需求确认',
     quotation: '报价/样品',
@@ -178,7 +275,7 @@ const progressLabel = computed(() => {
 })
 
 const stageTips = [
-  { stage: 'new', label: '新线索' },
+  { stage: 'new_lead', label: '新线索' },
   { stage: 'first_contact', label: '首次联系' },
   { stage: 'requirement', label: '需求确认' },
   { stage: 'quotation', label: '报价/样品' },
@@ -234,16 +331,24 @@ const submitFollow = async () => {
 
 const goBack = () => router.push('/leads')
 
+const callPhone = (phone: string) => {
+  window.location.href = `tel:${phone}`
+}
+
+const openWebsite = (url: string) => {
+  window.open(url, '_blank')
+}
+
 const formatDate = (date?: string) => date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'
 
 const getPriorityType = (level?: string) => level === 'hot' ? 'danger' : level === 'warm' ? 'warning' : 'info'
 const getPriorityLabel = (level?: string) => level === 'hot' ? '高' : level === 'warm' ? '中' : '低'
 const getStatusType = (status?: string) => {
-  const types: Record<string, string> = { new: 'info', contacting: 'warning', negotiating: 'primary', converted: 'success', lost: 'danger' }
+  const types: Record<string, string> = { new_lead: 'info', contacting: 'warning', negotiating: 'primary', converted: 'success', lost: 'danger' }
   return types[status || ''] || 'info'
 }
 const getStatusLabel = (status?: string) => {
-  const labels: Record<string, string> = { new: '新线索', contacting: '联系中', negotiating: '谈判中', converted: '已成交', lost: '已流失' }
+  const labels: Record<string, string> = { new_lead: '新线索', contacting: '联系中', negotiating: '谈判中', converted: '已成交', lost: '已流失' }
   return labels[status || ''] || status
 }
 
@@ -278,6 +383,139 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .lead-detail {
+  &.is-mobile {
+    padding-bottom: 80px;
+    
+    .mobile-header {
+      background: white;
+      padding: 12px 16px;
+      margin: -12px -12px 12px;
+      
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        
+        .header-title {
+          font-size: 17px;
+          font-weight: 600;
+        }
+        
+        .more-icon {
+          font-size: 22px;
+          color: #1D1D1F;
+        }
+      }
+      
+      .header-company {
+        h1 {
+          font-size: 20px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+        
+        .company-tags {
+          display: flex;
+          gap: 8px;
+        }
+      }
+    }
+    
+    .detail-content {
+      grid-template-columns: 1fr;
+    }
+    
+    .info-card {
+      h2 {
+        font-size: 16px;
+      }
+      
+      .mobile-info-list {
+        .info-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid #F5F5F7;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          .info-label {
+            color: #86868B;
+            font-size: 14px;
+          }
+          
+          .info-value {
+            color: #1D1D1F;
+            font-size: 14px;
+            
+            &.phone, &.link {
+              color: #007AFF;
+            }
+            
+            .el-icon {
+              margin-left: 4px;
+            }
+          }
+        }
+      }
+    }
+    
+    .follow-card {
+      h2 {
+        font-size: 16px;
+      }
+      
+      .progress-section {
+        .stage-tips {
+          flex-wrap: wrap;
+          gap: 8px;
+          
+          span {
+            font-size: 11px;
+          }
+        }
+      }
+      
+      .follow-list {
+        .follow-item {
+          padding: 12px 0;
+          
+          .follow-content {
+            .follow-tags {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 4px;
+              
+              .el-tag {
+                margin-right: 0;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .mobile-bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+      
+      .el-button {
+        flex: 1;
+      }
+    }
+  }
+  
   .detail-header {
     display: flex;
     align-items: center;
@@ -294,6 +532,13 @@ onMounted(() => {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
+  }
+  
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
   
   .info-card {
@@ -314,6 +559,7 @@ onMounted(() => {
       
       p {
         color: #86868B;
+        white-space: pre-wrap;
       }
     }
   }
@@ -355,6 +601,12 @@ onMounted(() => {
     }
     
     .follow-list {
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #86868B;
+      }
+      
       .follow-item {
         padding: 16px;
         border-bottom: 1px solid #E5E5E5;
@@ -372,6 +624,10 @@ onMounted(() => {
         .follow-content {
           .el-tag {
             margin-right: 8px;
+          }
+          
+          .follow-tags {
+            margin-bottom: 8px;
           }
           
           p {

@@ -1,8 +1,9 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" :class="{ 'is-mobile': isMobile }">
     <div class="login-card">
       <div class="login-header">
-        <h1>婚纱制品自助获客系统</h1>
+        <span class="logo-icon">👰</span>
+        <h1>婚纱获客系统</h1>
         <p>Lead CRM System</p>
       </div>
       
@@ -49,15 +50,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { login } from '@/api/auth'
+import { isMobile } from '@/utils/device'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const isMobileRef = ref(false)
 
 const form = reactive({
   username: '',
@@ -86,6 +89,10 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  isMobileRef.value = isMobile()
+})
 </script>
 
 <style scoped lang="scss">
@@ -95,10 +102,62 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px;
+  
+  // 移动端样式
+  &.is-mobile {
+    padding: 0;
+    
+    .login-card {
+      width: 100%;
+      max-width: none;
+      min-height: 100vh;
+      border-radius: 0;
+      padding: 60px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      
+      .login-header {
+        flex: 0 0 auto;
+        margin-bottom: 48px;
+        
+        .logo-icon {
+          font-size: 48px;
+          display: block;
+          margin-bottom: 16px;
+        }
+        
+        h1 {
+          font-size: 28px;
+        }
+      }
+      
+      .login-form {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        
+        .el-form-item:last-of-type {
+          margin-top: 24px;
+        }
+      }
+      
+      .login-btn {
+        height: 52px;
+        font-size: 18px;
+      }
+      
+      .login-footer {
+        flex: 0 0 auto;
+        margin-top: 32px;
+      }
+    }
+  }
 }
 
 .login-card {
   width: 400px;
+  max-width: 100%;
   background: white;
   border-radius: 16px;
   padding: 40px;
@@ -108,6 +167,11 @@ const handleLogin = async () => {
 .login-header {
   text-align: center;
   margin-bottom: 32px;
+  
+  .logo-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+  }
   
   h1 {
     font-size: 24px;

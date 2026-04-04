@@ -1,4 +1,4 @@
-// 全局样式 - 苹果简约风格
+// 全局样式 - 苹果简约风格 + 移动端适配
 
 :root {
   --primary-color: #007AFF;
@@ -11,18 +11,34 @@
   --bg-secondary: #F5F5F7;
   --border-radius: 12px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  
+  // 移动端变量
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 // 卡片样式
@@ -60,4 +76,197 @@ body {
   border-radius: var(--border-radius);
   border: none;
   box-shadow: var(--shadow);
+}
+
+// ==================== 移动端适配 ====================
+
+// 隐藏移动端滚动条但保持滚动功能
+@mixin hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// 移动端媒体查询
+$mobile-breakpoint: 768px;
+$tablet-breakpoint: 1024px;
+
+// 移动端通用样式
+@media screen and (max-width: $mobile-breakpoint) {
+  body {
+    font-size: 14px;
+  }
+  
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .page-container {
+    padding: 12px;
+  }
+  
+  // 移动端按钮调整
+  .el-button {
+    --el-button-size-default-height: 44px;
+  }
+  
+  // 移动端输入框调整
+  .el-input {
+    --el-input-inner-height: 44px;
+  }
+  
+  // 移动端选择器调整
+  .el-select {
+    width: 100%;
+  }
+  
+  // 移动端表格隐藏
+  .el-table {
+    display: none;
+  }
+  
+  // 移动端分页简化
+  .el-pagination {
+    .el-pagination__sizes,
+    .el-pagination__jump {
+      display: none;
+    }
+  }
+  
+  // 移动端消息框调整
+  .el-message-box {
+    width: 90% !important;
+    max-width: 320px;
+  }
+  
+  // 移动端对话框调整
+  .el-dialog {
+    --el-dialog-width: 90% !important;
+    --el-dialog-margin-top: 10vh !important;
+    border-radius: 16px;
+  }
+  
+  // 移动端下拉菜单调整
+  .el-dropdown-menu {
+    max-width: 200px;
+  }
+}
+
+// 平板适配
+@media screen and (min-width: $mobile-breakpoint) and (max-width: $tablet-breakpoint) {
+  .card {
+    padding: 20px;
+  }
+  
+  .page-container {
+    padding: 16px;
+  }
+}
+
+// 安全区域适配 (iPhone X 及以上)
+@supports (padding: max(0px)) {
+  body {
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+    padding-left: var(--safe-area-inset-left);
+    padding-right: var(--safe-area-inset-right);
+  }
+}
+
+// 触摸设备优化
+@media (hover: none) {
+  .el-button:active {
+    transform: scale(0.98);
+  }
+  
+  .el-menu-item:active {
+    transform: scale(0.98);
+  }
+}
+
+// 移动端隐藏类
+.mobile-hidden {
+  @media screen and (max-width: $mobile-breakpoint) {
+    display: none !important;
+  }
+}
+
+// PC端隐藏类
+.desktop-hidden {
+  @media screen and (min-width: $mobile-breakpoint + 1) {
+    display: none !important;
+  }
+}
+
+// 禁止文本选择 (移动端优化)
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+// 滚动容器
+.scroll-container {
+  overflow-y: auto;
+  @include hide-scrollbar;
+  -webkit-overflow-scrolling: touch;
+}
+
+// 弹性布局工具类
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// 文本截断
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// 动画过渡
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
