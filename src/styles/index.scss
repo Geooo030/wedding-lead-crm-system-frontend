@@ -1,0 +1,63 @@
+// 全局样式 - 苹果简约风格
+
+:root {
+  --primary-color: #007AFF;
+  --success-color: #34C759;
+  --warning-color: #FF9500;
+  --danger-color: #FF3B30;
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F7;
+  --border-radius: 12px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+// 卡片样式
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+// 页面容器
+.page-container {
+  padding: 24px;
+  min-height: 100vh;
+}
+
+// Element Plus 覆盖
+.el-button--primary {
+  --el-button-bg-color: var(--primary-color);
+  --el-button-border-color: var(--primary-color);
+}
+
+.el-table {
+  --el-table-header-bg-color: var(--bg-secondary);
+  --el-table-header-text-color: var(--text-primary);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.el-input__wrapper {
+  border-radius: 8px;
+}
+
+.el-card {
+  border-radius: var(--border-radius);
+  border: none;
+  box-shadow: var(--shadow);
+}
