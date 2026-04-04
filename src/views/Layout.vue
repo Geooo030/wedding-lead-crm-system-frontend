@@ -60,7 +60,11 @@
         </el-header>
         
         <el-main class="main">
-          <router-view />
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
         </el-main>
       </el-container>
     </el-container>
@@ -89,7 +93,11 @@
       
       <!-- 移动端内容区 -->
       <div class="mobile-content">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </div>
       
       <!-- 移动端底部导航 -->
@@ -135,17 +143,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { isMobile as checkIsMobile, getDeviceInfo, watchScreenChange } from '@/utils/device'
-import type { DeviceInfo } from '@/utils/device'
+import { isMobile as checkIsMobile } from '@/utils/device'
 
 const route = useRoute()
 const router = useRouter()
 
-// 设备状态
-const isMobileRef = ref(checkIsMobile())
-const deviceInfo = ref<DeviceInfo>(getDeviceInfo())
+// 设备状态 - 只在初始化时检测一次
+const isMobile = ref(checkIsMobile())
 
 const activeMenu = computed(() => route.path)
 const username = computed(() => localStorage.getItem('username') || '用户')
@@ -160,12 +166,6 @@ const pageTitle = computed(() => {
   return titles[route.path] || '获客系统'
 })
 
-// 更新设备信息
-const updateDeviceInfo = (info: DeviceInfo) => {
-  deviceInfo.value = info
-  isMobileRef.value = info.isMobile
-}
-
 // 导航到指定页面
 const navigateTo = (path: string) => {
   router.push(path)
@@ -178,22 +178,6 @@ const handleCommand = (command: string) => {
     router.push('/login')
   }
 }
-
-// 监听屏幕变化
-let unwatch: (() => void) | null = null
-
-onMounted(() => {
-  unwatch = watchScreenChange(updateDeviceInfo)
-})
-
-onUnmounted(() => {
-  if (unwatch) {
-    unwatch()
-  }
-})
-
-// 导出 isMobile 给模板使用
-const isMobile = computed(() => isMobileRef.value)
 </script>
 
 <style scoped lang="scss">
@@ -330,7 +314,7 @@ const isMobile = computed(() => isMobileRef.value)
   flex: 1;
   overflow-y: auto;
   padding: 12px;
-  padding-bottom: 70px; // 给底部导航留空间
+  padding-bottom: 70px;
 }
 
 .mobile-nav {
@@ -380,5 +364,16 @@ const isMobile = computed(() => isMobileRef.value)
       transform: scale(0.95);
     }
   }
+}
+
+// 页面切换动画
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

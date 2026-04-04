@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard" :class="{ 'is-mobile': isMobile }">
     <!-- 统计卡片 -->
-    <div class="stat-cards">
+    <div class="stat-cards" v-loading="loading">
       <div class="stat-card">
         <div class="stat-icon" style="background: #007AFF;">📊</div>
         <div class="stat-info">
@@ -37,12 +37,12 @@
     
     <!-- 图表区域 -->
     <div class="charts-row">
-      <div class="card chart-card">
+      <div class="card chart-card" v-loading="loading">
         <h3>客户国家分布</h3>
         <div class="chart-container" ref="countryChartRef"></div>
       </div>
       
-      <div class="card chart-card">
+      <div class="card chart-card" v-loading="loading">
         <h3>客户状态分布</h3>
         <div class="chart-container" ref="statusChartRef"></div>
       </div>
@@ -70,16 +70,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { PieChart, BarChart } from 'echarts/charts'
+import { 
+  TitleComponent, 
+  TooltipComponent, 
+  LegendComponent, 
+  GridComponent 
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import { getDashboardStats } from '@/api/report'
 import { createTask } from '@/api/task'
 import { isMobile } from '@/utils/device'
 import type { DashboardStats } from '@/types'
 
+// 按需注册 ECharts 组件
+echarts.use([
+  PieChart, 
+  BarChart, 
+  TitleComponent, 
+  TooltipComponent, 
+  LegendComponent, 
+  GridComponent, 
+  CanvasRenderer
+])
+
 const router = useRouter()
+const loading = ref(true)
 const isMobileRef = ref(isMobile())
 const stats = ref<DashboardStats>({
   totalLeads: 0,
@@ -105,89 +125,101 @@ const convertedCount = computed(() => {
 })
 
 const loadStats = async () => {
+  loading.value = true
   try {
     const res = await getDashboardStats()
     stats.value = res.data
+    // 延迟渲染图表，让页面先显示
     await nextTick()
-    renderCharts()
-  } catch {
-    // 错误已处理
+    setTimeout(() => {
+      renderCharts()
+    }, 100)
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  } finally {
+    loading.value = false
   }
 }
 
 const renderCharts = () => {
-  // 销毁旧图表
-  if (countryChart) {
-    countryChart.dispose()
-  }
-  if (statusChart) {
-    statusChart.dispose()
-  }
-  
-  // 国家分布图
-  if (countryChartRef.value) {
-    countryChart = echarts.init(countryChartRef.value)
-    const isMobileVal = isMobileRef.value
-    countryChart.setOption({
-      tooltip: { trigger: 'item' },
-      legend: {
-        orient: isMobileVal ? 'horizontal' : 'vertical',
-        bottom: isMobileVal ? 0 : 'center',
-        left: isMobileVal ? 'center' : 'left'
-      },
-      series: [{
-        type: 'pie',
-        radius: isMobileVal ? ['30%', '50%'] : '60%',
-        center: isMobileVal ? ['50%', '40%'] : ['60%', '50%'],
-        data: stats.value.byCountry?.slice(0, 6).map((item: [string, number]) => ({
-          name: item[0],
-          value: item[1]
-        })) || [],
-        label: {
-          show: !isMobileVal
-        }
-      }]
-    })
-  }
-  
-  // 状态分布图
-  if (statusChartRef.value) {
-    statusChart = echarts.init(statusChartRef.value)
-    const statusNames: Record<string, string> = {
-      new_lead: '新线索',
-      contacting: '联系中',
-      negotiating: '谈判中',
-      converted: '已成交',
-      lost: '已流失'
+  try {
+    // 销毁旧图表
+    if (countryChart) {
+      countryChart.dispose()
+      countryChart = null
     }
-    statusChart.setOption({
-      tooltip: { trigger: 'axis' },
-      xAxis: { 
-        type: 'category',
-        axisLabel: {
-          interval: 0,
-          rotate: isMobileRef.value ? 30 : 0
-        }
-      },
-      yAxis: { type: 'value' },
-      grid: {
-        left: isMobileRef.value ? '12%' : '3%',
-        right: '4%',
-        bottom: isMobileRef.value ? '15%' : '3%',
-        containLabel: true
-      },
-      series: [{
-        type: 'bar',
-        data: stats.value.byStatus?.map((item: [string, number]) => ({
-          name: statusNames[item[0]] || item[0],
-          value: item[1]
-        })) || [],
-        itemStyle: {
-          color: '#007AFF'
+    if (statusChart) {
+      statusChart.dispose()
+      statusChart = null
+    }
+    
+    // 国家分布图
+    if (countryChartRef.value) {
+      countryChart = echarts.init(countryChartRef.value)
+      const isMobileVal = isMobileRef.value
+      countryChart.setOption({
+        tooltip: { trigger: 'item' },
+        legend: {
+          orient: isMobileVal ? 'horizontal' : 'vertical',
+          bottom: isMobileVal ? 0 : 'center',
+          left: isMobileVal ? 'center' : 'left'
         },
-        barWidth: isMobileRef.value ? '40%' : '60%'
-      }]
-    })
+        series: [{
+          type: 'pie',
+          radius: isMobileVal ? ['30%', '50%'] : '60%',
+          center: isMobileVal ? ['50%', '40%'] : ['60%', '50%'],
+          data: stats.value.byCountry?.slice(0, 6).map((item: [string, number]) => ({
+            name: item[0],
+            value: item[1]
+          })) || [],
+          label: {
+            show: !isMobileVal
+          }
+        }]
+      })
+    }
+    
+    // 状态分布图
+    if (statusChartRef.value) {
+      statusChart = echarts.init(statusChartRef.value)
+      const statusNames: Record<string, string> = {
+        new_lead: '新线索',
+        contacting: '联系中',
+        negotiating: '谈判中',
+        converted: '已成交',
+        lost: '已流失'
+      }
+      statusChart.setOption({
+        tooltip: { trigger: 'axis' },
+        xAxis: { 
+          type: 'category',
+          axisLabel: {
+            interval: 0,
+            rotate: isMobileRef.value ? 30 : 0
+          }
+        },
+        yAxis: { type: 'value' },
+        grid: {
+          left: isMobileRef.value ? '12%' : '3%',
+          right: '4%',
+          bottom: isMobileRef.value ? '15%' : '3%',
+          containLabel: true
+        },
+        series: [{
+          type: 'bar',
+          data: stats.value.byStatus?.map((item: [string, number]) => ({
+            name: statusNames[item[0]] || item[0],
+            value: item[1]
+          })) || [],
+          itemStyle: {
+            color: '#007AFF'
+          },
+          barWidth: isMobileRef.value ? '40%' : '60%'
+        }]
+      })
+    }
+  } catch (error) {
+    console.error('渲染图表失败:', error)
   }
 }
 
@@ -196,7 +228,6 @@ const handleResize = () => {
   isMobileRef.value = isMobile()
   if (countryChart) countryChart.resize()
   if (statusChart) statusChart.resize()
-  renderCharts()
 }
 
 const startLeadHunt = async () => {
@@ -218,6 +249,20 @@ const goToReports = () => router.push('/reports')
 onMounted(() => {
   loadStats()
   window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  // 清理图表实例
+  if (countryChart) {
+    countryChart.dispose()
+    countryChart = null
+  }
+  if (statusChart) {
+    statusChart.dispose()
+    statusChart = null
+  }
+  // 移除事件监听
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 

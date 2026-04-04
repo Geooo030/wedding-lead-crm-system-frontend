@@ -1,0 +1,1 @@
+function r(){const e=navigator.userAgent.toLowerCase();return!!(["android","iphone","ipad","ipod","windows phone","mobile","blackberry","webos","opera mini","opera mobi"].some(o=>e.includes(o))||window.innerWidth<768||"ontouchstart"in window||navigator.maxTouchPoints>0)}export{r as i};
