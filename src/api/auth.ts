@@ -9,3 +9,6 @@ export const logout = () =>
 
 export const getCurrentUser = () => 
   request.get<ApiResponse<{ username: string; userId: string }>>('/auth/me')
+
+export const register = (username: string, password: string) => 
+  request.post<ApiResponse<void>>('/auth/register', { username, password })

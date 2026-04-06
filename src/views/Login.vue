@@ -7,43 +7,95 @@
         <p>Lead CRM System</p>
       </div>
       
-      <el-form ref="formRef" :model="form" :rules="rules" class="login-form">
-        <el-form-item prop="username">
-          <el-input
-            v-model="form.username"
-            placeholder="用户名"
-            prefix-icon="User"
-            size="large"
-          />
-        </el-form-item>
+      <el-tabs v-model="activeTab" class="login-tabs">
+        <el-tab-pane label="登录" name="login">
+          <el-form ref="formRef" :model="form" :rules="rules" class="login-form">
+            <el-form-item prop="username">
+              <el-input
+                v-model="form.username"
+                placeholder="用户名"
+                prefix-icon="User"
+                size="large"
+              />
+            </el-form-item>
+            
+            <el-form-item prop="password">
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="密码"
+                prefix-icon="Lock"
+                size="large"
+                show-password
+                @keyup.enter="handleLogin"
+              />
+            </el-form-item>
+            
+            <el-form-item>
+              <el-button
+                type="primary"
+                size="large"
+                :loading="loading"
+                class="login-btn"
+                @click="handleLogin"
+              >
+                登录
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
         
-        <el-form-item prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="密码"
-            prefix-icon="Lock"
-            size="large"
-            show-password
-            @keyup.enter="handleLogin"
-          />
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button
-            type="primary"
-            size="large"
-            :loading="loading"
-            class="login-btn"
-            @click="handleLogin"
-          >
-            登录
-          </el-button>
-        </el-form-item>
-      </el-form>
+        <el-tab-pane label="注册" name="register">
+          <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" class="login-form">
+            <el-form-item prop="username">
+              <el-input
+                v-model="registerForm.username"
+                placeholder="用户名"
+                prefix-icon="User"
+                size="large"
+              />
+            </el-form-item>
+            
+            <el-form-item prop="password">
+              <el-input
+                v-model="registerForm.password"
+                type="password"
+                placeholder="密码"
+                prefix-icon="Lock"
+                size="large"
+                show-password
+              />
+            </el-form-item>
+            
+            <el-form-item prop="confirmPassword">
+              <el-input
+                v-model="registerForm.confirmPassword"
+                type="password"
+                placeholder="确认密码"
+                prefix-icon="Lock"
+                size="large"
+                show-password
+              />
+            </el-form-item>
+            
+            <el-form-item>
+              <el-button
+                type="primary"
+                size="large"
+                :loading="registerLoading"
+                class="login-btn"
+                @click="handleRegister"
+              >
+                注册
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
       
       <div class="login-footer">
-        <p>默认账号: admin / admin123</p>
+        <p v-if="activeTab === 'login'">默认账号: admin / admin123</p>
+        <p v-else>注册后请使用新账号登录</p>
       </div>
     </div>
   </div>
@@ -54,22 +106,55 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { login } from '@/api/auth'
+import { login, register } from '@/api/auth'
 import { isMobile } from '@/utils/device'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
+const registerFormRef = ref<FormInstance>()
 const loading = ref(false)
+const registerLoading = ref(false)
 const isMobileRef = ref(false)
+const activeTab = ref('login')
 
 const form = reactive({
   username: '',
   password: ''
 })
 
+const registerForm = reactive({
+  username: '',
+  password: '',
+  confirmPassword: ''
+})
+
 const rules: FormRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+}
+
+const registerRules: FormRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 2, max: 20, message: '用户名长度应在2-20之间', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度至少6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== registerForm.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
 }
 
 const handleLogin = async () => {
@@ -87,6 +172,22 @@ const handleLogin = async () => {
     // 错误已在拦截器处理
   } finally {
     loading.value = false
+  }
+}
+
+const handleRegister = async () => {
+  const valid = await registerFormRef.value?.validate()
+  if (!valid) return
+  
+  registerLoading.value = true
+  try {
+    await register(registerForm.username, registerForm.password)
+    ElMessage.success('注册成功，请登录')
+    activeTab.value = 'login'
+  } catch {
+    // 错误已在拦截器处理
+  } finally {
+    registerLoading.value = false
   }
 }
 
