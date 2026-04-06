@@ -1,1 +1,0 @@
-import{r as t}from"./request-DYtKFt8K.js";const o=()=>t.get("/reports/dashboard"),r=()=>t.get("/reports/daily"),s=()=>t.get("/reports/weekly"),a=()=>t.get("/reports/monthly");export{a,s as b,r as c,o as g};

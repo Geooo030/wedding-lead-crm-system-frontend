@@ -26,7 +26,7 @@ const checkVersionUpdate = () => {
     
     // 强制刷新页面
     setTimeout(() => {
-      window.location.reload(true)
+      window.location.reload()
     }, 3000)
   }
   
