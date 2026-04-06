@@ -94,8 +94,7 @@
       </el-tabs>
       
       <div class="login-footer">
-        <p v-if="activeTab === 'login'">默认账号: admin / admin123</p>
-        <p v-else>注册后请使用新账号登录</p>
+        <p v-if="activeTab === 'register'">注册后请使用新账号登录</p>
       </div>
     </div>
   </div>

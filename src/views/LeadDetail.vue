@@ -111,6 +111,12 @@
               {{ getStatusLabel(lead?.status) }}
             </el-tag>
           </el-descriptions-item>
+          <el-descriptions-item label="获客方式">
+            <el-tag :type="getLeadSourceType(lead?.leadSource)">
+              {{ getLeadSourceLabel(lead?.leadSource) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="跟进人">{{ lead?.followOperator || '-' }}</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ formatDate(lead?.createdAt) }}</el-descriptions-item>
         </el-descriptions>
         
@@ -123,6 +129,18 @@
           <div class="info-item">
             <span class="info-label">所在地区</span>
             <span class="info-value">{{ lead?.country }} · {{ lead?.region }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">获客方式</span>
+            <span class="info-value">
+              <el-tag :type="getLeadSourceType(lead?.leadSource)" size="small">
+                {{ getLeadSourceLabel(lead?.leadSource) }}
+              </el-tag>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">跟进人</span>
+            <span class="info-value">{{ lead?.followOperator || '-' }}</span>
           </div>
           <div class="info-item" v-if="lead?.contactPhone" @click="callPhone(lead.contactPhone)">
             <span class="info-label">联系电话</span>
@@ -255,10 +273,10 @@ const showFollowDialog = ref(false)
 const followFormRef = ref()
 
 const followForm = reactive<{
-  contactMethod: string | undefined
-  contactResult: string | undefined
-  customerIntention: string | undefined
-  currentStage: string | undefined
+  contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit' | undefined
+  contactResult: 'reached' | 'unreachable' | 'callback' | 'failed' | undefined
+  customerIntention: 'high' | 'medium' | 'low' | 'none' | undefined
+  currentStage: 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal' | undefined
   notes: string
   nextAction: string
 }>({
@@ -271,10 +289,10 @@ const followForm = reactive<{
 })
 
 const resetFollowForm = () => {
-  followForm.contactMethod = 'phone'
-  followForm.contactResult = 'reached'
-  followForm.customerIntention = 'medium'
-  followForm.currentStage = 'new_lead'
+  followForm.contactMethod = 'phone' as 'phone' | 'whatsapp' | 'email' | 'visit'
+  followForm.contactResult = 'reached' as 'reached' | 'unreachable' | 'callback' | 'failed'
+  followForm.customerIntention = 'medium' as 'high' | 'medium' | 'low' | 'none'
+  followForm.currentStage = 'new_lead' as 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
   followForm.notes = ''
   followForm.nextAction = ''
 }
@@ -416,6 +434,16 @@ const getIntentionLabel = (intention: string) => {
 const getIntentionType = (intention: string) => {
   const types: Record<string, string> = { high: 'success', medium: 'warning', low: 'info', none: 'danger' }
   return types[intention] || 'info'
+}
+
+const getLeadSourceLabel = (source?: string) => {
+  const labels: Record<string, string> = { ai: 'AI获客', manual: '人工获客' }
+  return labels[source || ''] || source || '-'
+}
+
+const getLeadSourceType = (source?: string) => {
+  const types: Record<string, string> = { ai: 'success', manual: 'warning' }
+  return types[source || ''] || 'info'
 }
 
 onMounted(() => {
