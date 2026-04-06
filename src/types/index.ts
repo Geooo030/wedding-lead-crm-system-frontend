@@ -16,7 +16,7 @@ export interface PageResponse<T> {
 
 // 用户
 export interface User {
-  id: string
+  id: string | number
   username: string
 }
 
@@ -29,7 +29,7 @@ export interface LoginResponse {
 
 // 客户线索
 export interface Lead {
-  id: string
+  id: string | number
   companyName: string
   companyType: string
   country: string
@@ -42,7 +42,10 @@ export interface Lead {
   intentSignals: string[]
   priorityScore: number
   priorityLevel: 'hot' | 'warm' | 'cold'
-  status: 'new' | 'contacting' | 'negotiating' | 'converted' | 'lost'
+  leadSource: 'ai' | 'manual'
+  leadChannel: string
+  followOperator: string
+  status: 'new_lead' | 'contacting' | 'negotiating' | 'converted' | 'lost'
   notes: string
   sourceUrl: string
   createdAt: string
@@ -51,13 +54,14 @@ export interface Lead {
 
 // 跟进记录
 export interface FollowRecord {
-  id: string
-  leadId: string
-  operatorId: string
+  id: string | number
+  leadId: string | number
+  operatorId: string | number
+  operatorUsername?: string
   contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit'
   contactResult: 'reached' | 'unreachable' | 'callback' | 'failed'
   customerIntention: 'high' | 'medium' | 'low' | 'none'
-  currentStage: 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal'
+  currentStage: 'new_lead' | 'first_contact' | 'requirement' | 'quotation' | 'deal' | 'rejected'
   notes: string
   nextAction: string
   nextActionDate: string

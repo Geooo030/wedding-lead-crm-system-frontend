@@ -41,6 +41,53 @@
     </div>
     
     <div class="detail-content">
+      <!-- 右侧：跟进记录 -->
+      <div class="card follow-card">
+        <div class="follow-header">
+          <h2>跟进记录</h2>
+          <el-button v-if="!isMobile" type="primary" @click="showFollowDialog = true">添加跟进</el-button>
+        </div>
+        
+        <!-- 进度条 -->
+        <div class="progress-section">
+          <h4>跟进进度</h4>
+          <el-progress :percentage="progress" :format="() => progressLabel" />
+          <div class="stage-tips" :class="{ 'is-mobile': isMobile }">
+            <span v-for="tip in stageTips" :key="tip.stage" :class="{ active: currentStage === tip.stage }">
+              {{ tip.label }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- 跟进列表 -->
+        <div class="follow-list">
+          <div v-if="followRecords.length === 0" class="empty-state">
+            暂无跟进记录
+          </div>
+          <div v-for="record in followRecords" :key="record.id" class="follow-item">
+            <div class="follow-header">
+              <div class="follow-time">{{ formatDate(record.createdAt) }}</div>
+              <div class="follow-operator" v-if="record.operatorUsername">
+                <el-tag type="info" size="small">跟进人: {{ record.operatorUsername }}</el-tag>
+              </div>
+            </div>
+            <div class="follow-content">
+              <div class="follow-tags">
+                <el-tag size="small">{{ getContactMethodLabel(record.contactMethod) }}</el-tag>
+                <el-tag size="small" :type="getContactResultType(record.contactResult)">
+                  {{ getContactResultLabel(record.contactResult) }}
+                </el-tag>
+                <el-tag size="small" :type="getIntentionType(record.customerIntention)">
+                  {{ getIntentionLabel(record.customerIntention) }}意向
+                </el-tag>
+              </div>
+              <p v-if="record.notes">{{ record.notes }}</p>
+              <p v-if="record.nextAction" class="next-action">下一步：{{ record.nextAction }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- 左侧：客户信息 -->
       <div class="card info-card">
         <h2>客户信息</h2>
@@ -105,48 +152,6 @@
           <p>{{ lead.notes }}</p>
         </div>
       </div>
-      
-      <!-- 右侧：跟进记录 -->
-      <div class="card follow-card">
-        <div class="follow-header">
-          <h2>跟进记录</h2>
-          <el-button v-if="!isMobile" type="primary" @click="showFollowDialog = true">添加跟进</el-button>
-        </div>
-        
-        <!-- 进度条 -->
-        <div class="progress-section">
-          <h4>跟进进度</h4>
-          <el-progress :percentage="progress" :format="() => progressLabel" />
-          <div class="stage-tips" :class="{ 'is-mobile': isMobile }">
-            <span v-for="tip in stageTips" :key="tip.stage" :class="{ active: currentStage === tip.stage }">
-              {{ tip.label }}
-            </span>
-          </div>
-        </div>
-        
-        <!-- 跟进列表 -->
-        <div class="follow-list">
-          <div v-if="followRecords.length === 0" class="empty-state">
-            暂无跟进记录
-          </div>
-          <div v-for="record in followRecords" :key="record.id" class="follow-item">
-            <div class="follow-time">{{ formatDate(record.createdAt) }}</div>
-            <div class="follow-content">
-              <div class="follow-tags">
-                <el-tag size="small">{{ getContactMethodLabel(record.contactMethod) }}</el-tag>
-                <el-tag size="small" :type="getContactResultType(record.contactResult)">
-                  {{ getContactResultLabel(record.contactResult) }}
-                </el-tag>
-                <el-tag size="small" :type="getIntentionType(record.customerIntention)">
-                  {{ getIntentionLabel(record.customerIntention) }}意向
-                </el-tag>
-              </div>
-              <p v-if="record.notes">{{ record.notes }}</p>
-              <p v-if="record.nextAction" class="next-action">下一步：{{ record.nextAction }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
     
     <!-- 移动端底部操作栏 -->
@@ -207,6 +212,7 @@
             <el-option label="需求确认" value="requirement" />
             <el-option label="报价/样品" value="quotation" />
             <el-option label="成交/归档" value="deal" />
+            <el-option label="已拒绝" value="rejected" />
           </el-select>
         </el-form-item>
         
@@ -288,7 +294,8 @@ const progressLabel = computed(() => {
     first_contact: '首次联系',
     requirement: '需求确认',
     quotation: '报价/样品',
-    deal: '成交'
+    deal: '成交',
+    rejected: '已拒绝'
   }
   return labels[currentStage.value] || '新线索'
 })
@@ -298,7 +305,8 @@ const stageTips = [
   { stage: 'first_contact', label: '首次联系' },
   { stage: 'requirement', label: '需求确认' },
   { stage: 'quotation', label: '报价/样品' },
-  { stage: 'deal', label: '成交' }
+  { stage: 'deal', label: '成交' },
+  { stage: 'rejected', label: '已拒绝' }
 ]
 
 const loadLead = async () => {
@@ -651,10 +659,23 @@ onMounted(() => {
           border-bottom: none;
         }
         
-        .follow-time {
-          font-size: 12px;
-          color: #86868B;
+        .follow-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           margin-bottom: 8px;
+          
+          .follow-time {
+            font-size: 12px;
+            color: #86868B;
+            margin-bottom: 0;
+          }
+          
+          .follow-operator {
+            .el-tag {
+              margin-right: 0;
+            }
+          }
         }
         
         .follow-content {

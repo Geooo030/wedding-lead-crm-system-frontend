@@ -4,7 +4,9 @@
     <div v-if="!isMobile" class="card filter-bar">
       <el-form :inline="true" :model="filters">
         <el-form-item label="国家">
-          <el-input v-model="filters.country" placeholder="输入国家" clearable />
+          <el-select v-model="filters.country" placeholder="选择国家" clearable style="width: 150px;">
+            <el-option v-for="country in countries" :key="country" :label="country" :value="country" />
+          </el-select>
         </el-form-item>
         
         <el-form-item label="状态">
@@ -58,7 +60,9 @@
         <div v-if="showFilterPanel" class="filter-panel">
           <div class="filter-item">
             <span class="filter-label">国家</span>
-            <el-input v-model="filters.country" placeholder="输入国家" clearable />
+            <el-select v-model="filters.country" placeholder="选择国家" clearable>
+              <el-option v-for="country in countries" :key="country" :label="country" :value="country" />
+            </el-select>
           </div>
           
           <div class="filter-item">
@@ -130,6 +134,12 @@
           </template>
         </el-table-column>
         
+        <el-table-column prop="followOperator" label="跟进人" width="120">
+          <template #default="{ row }">
+            {{ row.followOperator || '-' }}
+          </template>
+        </el-table-column>
+        
         <el-table-column prop="createdAt" label="创建时间" width="160">
           <template #default="{ row }">
             {{ formatDate(row.createdAt) }}
@@ -188,6 +198,11 @@
               📞 {{ lead.contactPhone }}
             </span>
           </div>
+          
+          <div class="info-row" v-if="lead.followOperator">
+            <span class="info-label">跟进人</span>
+            <span class="info-value">{{ lead.followOperator }}</span>
+          </div>
         </div>
         
         <div class="card-footer">
@@ -229,7 +244,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import { getLeads } from '@/api/lead'
+import { getLeads, getCountries } from '@/api/lead'
 import { isMobile as isMobileDevice } from '@/utils/device'
 import type { Lead } from '@/types'
 
@@ -241,6 +256,7 @@ const page = ref(1)
 const pageSize = ref(20)
 const isMobile = ref(isMobileDevice())
 const showFilterPanel = ref(false)
+const countries = ref<string[]>([])
 
 const filters = reactive({
   country: '',
@@ -250,6 +266,17 @@ const filters = reactive({
 })
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value) || 1)
+
+const loadCountries = async () => {
+  try {
+    const res = await getCountries()
+    if (res && res.data) {
+      countries.value = res.data
+    }
+  } catch (error) {
+    console.error('获取国家列表失败:', error)
+  }
+}
 
 const loadLeads = async () => {
   // 检查 token 是否存在
@@ -365,6 +392,7 @@ const getStatusLabel = (status: string) => {
 const formatDate = (date: string) => dayjs(date).format('MM-DD HH:mm')
 
 onMounted(() => {
+  loadCountries()
   loadLeads()
 })
 </script>

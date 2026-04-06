@@ -31,3 +31,6 @@ export const deleteLead = (id: string) =>
 
 export const importLeads = (leads: Partial<Lead>[]) => 
   request.post<ApiResponse<number>>('/leads/import', leads)
+
+export const getCountries = () => 
+  request.get<ApiResponse<string[]>>('/leads/countries')
