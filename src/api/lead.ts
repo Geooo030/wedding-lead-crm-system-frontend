@@ -34,3 +34,6 @@ export const importLeads = (leads: Partial<Lead>[]) =>
 
 export const getCountries = () => 
   request.get<ApiResponse<string[]>>('/leads/countries')
+
+export const getAgentSummary = () => 
+  request.get<ApiResponse<any[]>>('/leads/stats/agent-summary')

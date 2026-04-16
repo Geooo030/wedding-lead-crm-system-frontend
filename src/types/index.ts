@@ -18,6 +18,7 @@ export interface PageResponse<T> {
 export interface User {
   id: string | number
   username: string
+  role: 'admin' | 'boss' | 'sub_account'
 }
 
 // 登录响应
@@ -25,6 +26,7 @@ export interface LoginResponse {
   token: string
   username: string
   userId: string
+  role: 'admin' | 'boss' | 'sub_account'
 }
 
 // 客户线索
@@ -45,6 +47,7 @@ export interface Lead {
   leadSource: 'ai' | 'manual'
   leadChannel: string
   followOperator: string
+  agentId: string | number
   status: 'new_lead' | 'contacting' | 'negotiating' | 'converted' | 'lost'
   notes: string
   sourceUrl: string

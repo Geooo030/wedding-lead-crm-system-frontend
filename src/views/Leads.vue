@@ -1,5 +1,13 @@
 <template>
   <div class="leads-page" :class="{ 'is-mobile': isMobile }">
+    <!-- 功能切换栏 -->
+    <div class="card function-bar">
+      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="全部客户" name="all" />
+        <el-tab-pane label="我的跟进" name="following" />
+      </el-tabs>
+    </div>
+    
     <!-- PC端筛选栏 -->
     <div v-if="!isMobile" class="card filter-bar">
       <el-form :inline="true" :model="filters">
@@ -257,6 +265,7 @@ const pageSize = ref(20)
 const isMobile = ref(isMobileDevice())
 const showFilterPanel = ref(false)
 const countries = ref<string[]>([])
+const activeTab = ref('all')
 
 const filters = reactive({
   country: '',
@@ -278,6 +287,11 @@ const loadCountries = async () => {
   }
 }
 
+const handleTabClick = () => {
+  page.value = 1
+  loadLeads()
+}
+
 const loadLeads = async () => {
   // 检查 token 是否存在
   const token = localStorage.getItem('token')
@@ -289,11 +303,19 @@ const loadLeads = async () => {
   
   loading.value = true
   try {
-    const res = await getLeads({
+    // 构建请求参数
+    const requestParams = {
       ...filters,
       page: page.value - 1,
       size: pageSize.value
-    })
+    }
+    
+    // 如果是"我的跟进"标签，只显示联系中和谈判中的客户
+    if (activeTab.value === 'following') {
+      requestParams.status = 'contacting,negotiating'
+    }
+    
+    const res = await getLeads(requestParams)
     
     // 检查响应数据
     if (res && res.data) {
@@ -400,6 +422,10 @@ onMounted(() => {
 <style scoped lang="scss">
 .leads-page {
   // PC端样式
+  .function-bar {
+    margin-bottom: 20px;
+  }
+  
   .filter-bar {
     margin-bottom: 20px;
     

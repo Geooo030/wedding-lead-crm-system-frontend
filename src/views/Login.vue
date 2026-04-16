@@ -1,6 +1,5 @@
 <template>
-  <div class="login-container" :class="{ 'is-mobile': isMobile }">
-    <div class="login-card">
+  <div class="login-container" :class="{ 'is-mobile': isMobileRef }"><div class="login-card">
       <div class="login-header">
         <span class="logo-icon">👰</span>
         <h1>婚纱获客系统</h1>
