@@ -1,11 +1,9 @@
-// 通用响应类型
 export interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data: T
 }
 
-// 分页响应
 export interface PageResponse<T> {
   content: T[]
   totalElements: number
@@ -14,52 +12,49 @@ export interface PageResponse<T> {
   number: number
 }
 
-// 用户
 export interface User {
-  id: string | number
+  id: number
   username: string
-  role: 'admin' | 'boss' | 'sub_account'
+  email?: string
+  role: 'ADMIN' | 'BOSS' | 'SUB_ACCOUNT'
+  createdAt?: string
+  updatedAt?: string
+  lastLoginAt?: string
 }
 
-// 登录响应
 export interface LoginResponse {
   token: string
-  username: string
-  userId: string
-  role: 'admin' | 'boss' | 'sub_account'
+  user: User
 }
 
-// 客户线索
 export interface Lead {
-  id: string | number
+  id: number
   companyName: string
   companyType: string
+  businessScope: string
+  website: string
+  contactPhone: string
+  contactEmail: string
   country: string
   region: string
   address: string
-  contactPhone: string
-  contactEmail: string
-  website: string
-  businessScope: string
-  intentSignals: string[]
   priorityScore: number
-  priorityLevel: 'hot' | 'warm' | 'cold'
-  leadSource: 'ai' | 'manual'
+  priorityLevel: 'HOT' | 'WARM' | 'COLD'
+  leadSource: 'AI' | 'MANUAL'
   leadChannel: string
-  followOperator: string
-  agentId: string | number
-  status: 'new_lead' | 'contacting' | 'negotiating' | 'converted' | 'lost'
-  notes: string
   sourceUrl: string
+  notes: string
+  status: 'NEW_LEAD' | 'CONTACTING' | 'NEGOTIATING' | 'CONVERTED' | 'LOST'
+  agentId: number
+  followOperator: string
   createdAt: string
   updatedAt: string
 }
 
-// 跟进记录
 export interface FollowRecord {
-  id: string | number
-  leadId: string | number
-  operatorId: string | number
+  id: number
+  leadId: number
+  operatorId: number
   operatorUsername?: string
   contactMethod: 'phone' | 'whatsapp' | 'email' | 'visit'
   contactResult: 'reached' | 'unreachable' | 'callback' | 'failed'
@@ -71,35 +66,36 @@ export interface FollowRecord {
   createdAt: string
 }
 
-// Agent任务
 export interface AgentTask {
-  id: string
-  taskType: 'lead_hunt' | 'report_summary' | 'custom'
-  taskParams: Record<string, unknown>
-  status: 'pending' | 'running' | 'completed' | 'failed'
-  result: Record<string, unknown>
-  scheduledAt: string
-  startedAt: string
-  completedAt: string
-  errorMessage: string
+  id: number
+  title: string
+  description: string
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  priority: 'HIGH' | 'MEDIUM' | 'LOW'
+  agentId: number
+  leadId: number
+  deadline: string
   createdAt: string
+  updatedAt: string
+  completedAt: string
+  createdBy: number
+  completedBy: number
 }
 
-// 报表
 export interface Report {
-  id: string
+  id?: number
   reportType: 'daily' | 'weekly' | 'monthly'
   reportDate: string
-  metrics: Record<string, unknown>
-  agentSummary: string
+  metrics: Record<string, any>
+  agentSummary: [string, number][]
   createdAt: string
 }
 
-// 看板统计
 export interface DashboardStats {
   totalLeads: number
   newLeadsToday: number
   byCountry: [string, number][]
   byStatus: [string, number][]
   byPriority: [string, number][]
+  agentSummary: [string, number][]
 }

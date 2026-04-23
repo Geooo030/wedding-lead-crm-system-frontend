@@ -8,7 +8,14 @@ export const logout = () =>
   request.post<ApiResponse<void>>('/auth/logout')
 
 export const getCurrentUser = () => 
-  request.get<ApiResponse<{ username: string; userId: string; role: 'admin' | 'boss' | 'sub_account' }>>('/auth/me')
+  request.get<ApiResponse<User>>('/auth/me')
 
-export const register = (username: string, password: string) => 
-  request.post<ApiResponse<void>>('/auth/register', { username, password })
+interface RegisterData {
+  username: string
+  email: string
+  password: string
+  role?: string
+}
+
+export const register = (data: RegisterData) => 
+  request.post<ApiResponse<User>>('/auth/register', data)

@@ -319,8 +319,9 @@ const loadLeads = async () => {
     
     // 检查响应数据
     if (res && res.data) {
-      leads.value = res.data.content || []
-      total.value = res.data.totalElements || 0
+      // 后端直接返回数组，不是分页格式
+      leads.value = Array.isArray(res.data) ? res.data : []
+      total.value = leads.value.length
     } else {
       console.error('响应数据格式错误:', res)
       ElMessage.error('数据格式错误')
@@ -380,33 +381,33 @@ const callPhone = (phone: string) => {
 }
 
 const getPriorityType = (level: string) => {
-  const types: Record<string, string> = { hot: 'danger', warm: 'warning', cold: 'info' }
+  const types: Record<string, string> = { HOT: 'danger', WARM: 'warning', COLD: 'info' }
   return types[level] || 'info'
 }
 
 const getPriorityLabel = (level: string) => {
-  const labels: Record<string, string> = { hot: '高', warm: '中', cold: '低' }
+  const labels: Record<string, string> = { HOT: '高', WARM: '中', COLD: '低' }
   return labels[level] || level
 }
 
 const getStatusType = (status: string) => {
   const types: Record<string, string> = {
-    new_lead: 'info',
-    contacting: 'warning',
-    negotiating: 'primary',
-    converted: 'success',
-    lost: 'danger'
+    NEW_LEAD: 'info',
+    CONTACTING: 'warning',
+    NEGOTIATING: 'primary',
+    CONVERTED: 'success',
+    LOST: 'danger'
   }
   return types[status] || 'info'
 }
 
 const getStatusLabel = (status: string) => {
   const labels: Record<string, string> = {
-    new_lead: '新线索',
-    contacting: '联系中',
-    negotiating: '谈判中',
-    converted: '已成交',
-    lost: '已流失'
+    NEW_LEAD: '新线索',
+    CONTACTING: '联系中',
+    NEGOTIATING: '谈判中',
+    CONVERTED: '已成交',
+    LOST: '已流失'
   }
   return labels[status] || status
 }
