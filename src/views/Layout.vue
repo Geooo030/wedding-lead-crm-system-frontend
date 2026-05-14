@@ -12,7 +12,7 @@
         <el-menu
           :default-active="activeMenu"
           class="sidebar-menu"
-          router
+          @select="navigateTo"
         >
           <el-menu-item index="/dashboard">
             <el-icon><DataAnalysis /></el-icon>
@@ -60,11 +60,10 @@
         </el-header>
         
         <el-main class="main">
-          <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
-              <component :is="Component" />
-            </transition>
-          </router-view>
+          <div class="fallback-content" v-if="!routerAvailable">
+            <p>请确保路由已正确配置</p>
+          </div>
+          <router-view v-else />
         </el-main>
       </el-container>
     </el-container>
@@ -93,11 +92,7 @@
       
       <!-- 移动端内容区 -->
       <div class="mobile-content">
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+        <router-view v-if="routerAvailable" />
       </div>
       
       <!-- 移动端底部导航 -->
@@ -143,18 +138,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 import { isMobile as checkIsMobile } from '@/utils/device'
 
-const route = useRoute()
-const router = useRouter()
-
-// 设备状态 - 只在初始化时检测一次
+// 设备状态
 const isMobile = ref(checkIsMobile())
 
-const activeMenu = computed(() => route.path)
-const username = computed(() => localStorage.getItem('username') || '用户')
+// 安全获取当前路径
+const getCurrentPath = (): string => {
+  try {
+    return window.location.pathname || '/dashboard'
+  } catch {
+    return '/dashboard'
+  }
+}
+
+const activeMenu = ref(getCurrentPath())
+const username = ref(localStorage.getItem('username') || '用户')
+const routerAvailable = ref(true)
 
 const pageTitle = computed(() => {
   const titles: Record<string, string> = {
@@ -163,21 +164,42 @@ const pageTitle = computed(() => {
     '/reports': '报表',
     '/tasks': '任务'
   }
-  return titles[route.path] || '获客系统'
+  return titles[activeMenu.value] || '获客系统'
 })
 
-// 导航到指定页面
+// 安全导航
 const navigateTo = (path: string) => {
-  router.push(path)
+  try {
+    activeMenu.value = path
+    window.location.hash = path
+    // 如果是 history 模式
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path)
+      window.location.reload()
+    }
+  } catch {
+    window.location.href = path
+  }
 }
 
 const handleCommand = (command: string) => {
   if (command === 'logout') {
     localStorage.removeItem('token')
     localStorage.removeItem('username')
-    router.push('/login')
+    navigateTo('/login')
   }
 }
+
+onMounted(() => {
+  // 监听路径变化
+  window.addEventListener('hashchange', () => {
+    activeMenu.value = getCurrentPath()
+  })
+  
+  window.addEventListener('popstate', () => {
+    activeMenu.value = getCurrentPath()
+  })
+})
 </script>
 
 <style scoped lang="scss">
@@ -192,6 +214,14 @@ const handleCommand = (command: string) => {
   .el-container {
     height: 100%;
   }
+}
+
+.fallback-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #909399;
 }
 
 // PC端样式

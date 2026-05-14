@@ -16,7 +16,7 @@ export interface User {
   id: number
   username: string
   email?: string
-  role: 'ADMIN' | 'BOSS' | 'SUB_ACCOUNT'
+  role: 'ADMIN' | 'BOSS' | 'AGENT'
   createdAt?: string
   updatedAt?: string
   lastLoginAt?: string

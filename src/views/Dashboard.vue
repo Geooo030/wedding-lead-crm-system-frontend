@@ -115,12 +115,12 @@ let countryChart: echarts.ECharts | null = null
 let statusChart: echarts.ECharts | null = null
 
 const hotLeadsCount = computed(() => {
-  const hot = stats.value.byPriority?.find((item: [string, number]) => item[0] === 'hot')
+  const hot = stats.value.byPriority?.find((item: [string, number]) => item[0] === 'HOT')
   return hot ? hot[1] : 0
 })
 
 const convertedCount = computed(() => {
-  const converted = stats.value.byStatus?.find((item: [string, number]) => item[0] === 'converted')
+  const converted = stats.value.byStatus?.find((item: [string, number]) => item[0] === 'CONVERTED')
   return converted ? converted[1] : 0
 })
 
@@ -183,11 +183,11 @@ const renderCharts = () => {
     if (statusChartRef.value) {
       statusChart = echarts.init(statusChartRef.value)
       const statusNames: Record<string, string> = {
-        new_lead: '新线索',
-        contacting: '联系中',
-        negotiating: '谈判中',
-        converted: '已成交',
-        lost: '已流失'
+        NEW_LEAD: '新线索',
+        CONTACTING: '联系中',
+        NEGOTIATING: '谈判中',
+        CONVERTED: '已成交',
+        LOST: '已流失'
       }
       statusChart.setOption({
         tooltip: { trigger: 'axis' },
@@ -232,9 +232,14 @@ const handleResize = () => {
 
 const startLeadHunt = async () => {
   try {
+    const userIdStr = localStorage.getItem('userId')
+    const agentId = userIdStr ? parseInt(userIdStr) : 1
     await createTask({
-      taskType: 'lead_hunt',
-      taskParams: { region: 'middle_east' }
+      title: '获客任务',
+      description: '从指定区域获取潜在客户',
+      priority: 'MEDIUM',
+      agentId: agentId,
+      status: 'PENDING'
     })
     ElMessage.success('获客任务已创建')
     router.push('/tasks')
